@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>📋 记录 - 调酒库</title>
+<link rel="stylesheet" href="style.css">
+<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><link rel=apple-touch-icon href=icons/icon-192.svg></head>
+<body>
+<header>
+<div class="header-inner">
+<div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
+<nav>
+<a href="index.html">🏠</a>
+<a href="cabinet.html">🍾 酒柜</a>
+<a href="recipes.html">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html" class="active">📋 记录</a>
+</nav>
+</div>
+</header>
+<main>
+<div class="page-title">📋 饮用记录</div>
+<div class="card">
+<div class="card-header"><h2>历史记录</h2><button class="btn btn-outline btn-sm" onclick="clearLog()">🗑️ 清空记录</button></div>
+<div id="log-list"></div>
+</div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script src="common.js"></script>
+<script>
+function renderLog(){const l=document.getElementById("log-list"),items=DB.get("log");if(!items.length){l.innerHTML="<div class=empty-state><div class=empty-icon>📋</div><p>还没有记录，去摇一杯吧！</p></div>";return}
+l.innerHTML=items.map(e=>{const d=new Date(e.drankAt);let q=String.fromCharCode(34);return"<div class=log-entry><div><div class=log-name>🥂 "+esc(e.recipeName)+"</div><div class=log-date>"+d.toLocaleDateString("zh-CN")+" "+d.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"})+" · "+e.ingredients.length+" 种</div></div><button class=btn-icon onclick=deleteLogEntry("+q+e.id+q+") title=删除>🗑️</button></div>"}).join("")}
+highlightNav();renderLog()
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>
+</html>
