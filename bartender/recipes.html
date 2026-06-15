@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>📖 配方 - 调酒库</title>
+<link rel="stylesheet" href="style.css">
+<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><link rel=apple-touch-icon href=icons/icon-192.svg></head>
+<body>
+<header>
+<div class="header-inner">
+<div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
+<nav>
+<a href="index.html">🏠</a>
+<a href="cabinet.html">🍾 酒柜</a>
+<a href="recipes.html" class="active">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+</div>
+</header>
+<main>
+<div class="page-title">📖 我的配方</div>
+<div class="card">
+<div class="card-header"><h2>所有配方</h2><button class="btn btn-primary" onclick="showRecipeModal()">+ 添加配方</button></div>
+<div id="recipe-list"></div>
+</div>
+</main>
+
+<div class="modal-overlay" id="modal-recipe">
+<div class="modal">
+<h3 id="recipe-modal-title">添加配方</h3>
+<div class="form-group"><label>鸡尾酒名</label><input type="text" id="recipe-name" placeholder="尼格罗尼"></div>
+<div class="form-group"><label>选用杯型</label><input type="text" id="recipe-glass" placeholder="古典杯、马天尼杯"></div>
+<div class="form-group"><label>配料 <span style="font-weight:400;color:var(--text2);font-size:.78rem">输入酒的类型名</span></label><div id="ingredient-list"></div><button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addIngredientField()">+ 添加配料</button></div>
+<div class="form-group"><label>做法</label><textarea id="recipe-instructions" placeholder="将所有配料倒入搅拌杯加冰搅拌..."></textarea></div>
+<div class="form-group"><label>装饰（可选）</label><input type="text" id="recipe-garnish" placeholder="橙皮、樱桃"></div>
+<input type="hidden" id="recipe-edit-id">
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('recipe')">取消</button><button class="btn btn-primary" onclick="saveRecipeHandler()">保存</button></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="common.js"></script>
+<script>
+function renderRecipes(){const l=document.getElementById("recipe-list"),r=DB.get("recipes");if(!r.length){l.innerHTML="<div class=empty-state><div class=empty-icon>📖</div><p>还没有配方</p></div>";return}
+l.innerHTML=r.map(x=>"<div class=recipe-preview><div class=recipe-preview-header><span class=recipe-preview-name>🍸 "+esc(x.name)+"</span><div class=item-actions><button class=btn-icon onclick=editRecipe(\""+x.id+"\") title=编辑>✏️</button><button class=btn-icon onclick=deleteRecipe(\""+x.id+"\") title=删除>🗑️</button></div></div><div class=recipe-preview-meta>"+x.ingredients.length+" 种 · "+(x.glass||"未选杯型")+"</div><div class=recipe-preview-tags>"+x.ingredients.slice(0,4).map(i=>"<span class=tag>"+esc(i.name)+"</span>").join("")+(x.ingredients.length>4?"<span class=tag>+"+(x.ingredients.length-4)+"</span>":"")+"</div></div>").join("")}
+function showRecipeModal(){document.getElementById("recipe-modal-title").textContent="添加配方";document.getElementById("recipe-edit-id").value="";document.getElementById("recipe-name").value="";document.getElementById("recipe-glass").value="";document.getElementById("recipe-instructions").value="";document.getElementById("recipe-garnish").value="";document.getElementById("ingredient-list").innerHTML="";addIngredientField();showModal("recipe")}
+function editRecipe(id){const r=DB.get("recipes").find(i=>i.id===id);if(!r)return;document.getElementById("recipe-modal-title").textContent="编辑配方";document.getElementById("recipe-edit-id").value=id;document.getElementById("recipe-name").value=r.name;document.getElementById("recipe-glass").value=r.glass||"";document.getElementById("recipe-instructions").value=r.instructions||"";document.getElementById("recipe-garnish").value=r.garnish||"";document.getElementById("ingredient-list").innerHTML="";r.ingredients.forEach(i=>addIngredientField(i.name,i.amount,i.unit));if(!r.ingredients.length)addIngredientField();showModal("recipe")}
+function saveRecipeHandler(){const id=document.getElementById("recipe-edit-id").value,n=document.getElementById("recipe-name").value.trim(),g=document.getElementById("recipe-glass").value.trim(),i=document.getElementById("recipe-instructions").value.trim(),ga=document.getElementById("recipe-garnish").value.trim();const rows=document.querySelectorAll(".ingredient-row"),ings=[];rows.forEach(r=>{const n=r.querySelector(".ing-name").value.trim(),a=parseFloat(r.querySelector(".ing-amount").value),u=r.querySelector(".ing-unit").value.trim()||"ml";if(n&&a)ings.push({name:n,amount:a,unit:u})});if(!n||!ings.length){toast("请填写名称和至少一种配料","warn");return}
+saveRecipe(id,n,g,i,ga,ings);closeModal("recipe");toast(id?"已更新":"已添加","ok");renderRecipes()}
+function addIngredientField(n,a,u){if(u===undefined)u="ml";if(n===undefined)n="";if(a===undefined)a="";const d=document.createElement("div");d.className="form-row ingredient-row";d.style.marginBottom="8px";d.innerHTML="<input class=ing-name placeholder=名称 value=\""+esc(n)+"\" style=flex:2><input class=ing-amount type=number placeholder=用量 value="+a+" style=flex:1;width:70px min=0 step=5><input class=ing-unit placeholder=ml value=\""+esc(u)+"\" style=width:50px;flex:none><button class=btn-icon onclick=this.parentElement.remove() title=移除>✕</button>";document.getElementById("ingredient-list").appendChild(d)}
+highlightNav();renderRecipes()
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>
+</html>

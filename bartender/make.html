@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🔍 做一杯 - 调酒库</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d4a574">
+<link rel="apple-touch-icon" href="icons/icon-192.svg">
+</head>
+<body>
+<header>
+<div class="header-inner">
+<div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
+<nav>
+<a href="index.html">🏠</a>
+<a href="cabinet.html">🍾 酒柜</a>
+<a href="recipes.html">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html" class="active">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+</div>
+</header>
+<main>
+<div class="page-title">🔍 做一杯</div>
+<div class="card">
+<div class="search-tabs" id="search-tabs">
+<button class="active" data-mode="name">按酒名搜索</button>
+<button data-mode="spirit">按基酒搜索</button>
+</div>
+<div class="form-row" style="margin-bottom:16px">
+<input type="text" id="search-input" placeholder="输入关键词...">
+<button class="btn btn-primary" onclick="doSearch()">搜索</button>
+</div>
+<div id="search-results"><div class="empty-state"><div class="empty-icon">🔍</div><p>搜索配方，一键制作</p></div></div>
+</div>
+</main>
+
+<div class="modal-overlay" id="modal-brand">
+<div class="modal">
+<h3>🥂 选择品牌</h3>
+<div class="modal-sub" id="brand-recipe-name">为这杯酒选择品牌</div>
+<div id="brand-pick-list"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('brand')">取消</button><button class="btn btn-primary" onclick="confirmBrandPick()">确认制作</button></div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modal-recipe-detail">
+<div class="modal">
+<h3 id="detail-name">🍸 配方详情</h3>
+<div id="detail-content"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('recipe-detail')">关闭</button><button class="btn btn-primary" id="detail-make-btn" style="display:none">做这杯</button></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="common.js"></script>
+<script>
+let searchMode="name"
+document.querySelectorAll("#search-tabs button").forEach(b=>{b.addEventListener("click",()=>{document.querySelectorAll("#search-tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");searchMode=b.dataset.mode;document.getElementById("search-input").placeholder=searchMode==="name"?"输入鸡尾酒名称...":"输入基酒名称..."})})
+document.getElementById("search-input").addEventListener("keydown",e=>{if(e.key==="Enter")doSearch()})
+function doSearch(){const q=document.getElementById("search-input").value.trim().toLowerCase();const el=document.getElementById("search-results"),all=DB.get("recipes");if(!q){el.innerHTML="<div class=empty-state><div class=empty-icon>🔍</div><p>输入关键词搜索</p></div>";return}
+const res=searchMode==="name"?all.filter(r=>r.name.toLowerCase().includes(q)):all.filter(r=>r.ingredients.some(i=>i.name.toLowerCase().includes(q)));if(!res.length){el.innerHTML="<div class=empty-state><div class=empty-icon>🔍</div><p>没有找到匹配的配方</p></div>";return}
+let q2=String.fromCharCode(34);el.innerHTML="<p style=font-size:.82rem;color:var(--text2);margin-bottom:12px>找到 "+res.length+" 个</p>"+res.map(r=>{const m=checkMissing(r);return"<div class=recipe-preview><div class=recipe-preview-header><span class=recipe-preview-name>🍸 "+esc(r.name)+"</span></div><div class=recipe-preview-meta>"+r.ingredients.map(i=>esc(i.name)).join(" · ")+"</div><div class=recipe-preview-tags style=margin-top:4px>"+(m.length?"<span style=color:var(--warn);font-size:.78rem>⚠️ 缺 "+m.map(x=>esc(x.name)).join("、")+"</span>":"<span style=color:var(--ok);font-size:.78rem>✅ 材料齐全</span>")+"</div><div class=search-actions><button class='btn btn-outline btn-sm' onclick=showRecipeDetail("+q2+r.id+q2+")>查看配方</button>"+(m.length?"":"<button class='btn btn-primary btn-sm' onclick=makeDrink("+q2+r.id+q2+")>做这杯</button>")+"</div></div>"}).join("")}
+function showRecipeDetail(id){const r=DB.get("recipes").find(x=>x.id===id);if(!r)return;const m=checkMissing(r);const btn=document.getElementById("detail-make-btn");document.getElementById("detail-name").textContent="🍸 "+r.name;let q2=String.fromCharCode(34);let h="<div style=margin-bottom:16px>";if(r.glass)h+="<div style=font-size:.82rem;color:var(--text2);margin-bottom:4px>🍸 杯型: "+esc(r.glass)+"</div>";h+="<div class=random-ingredients style=margin:12px 0><h4>🥃 配料</h4><ul>"+r.ingredients.map(i=>"<li>"+esc(i.name)+" — "+i.amount+" "+(i.unit||"ml")+"</li>").join("")+"</ul></div>";h+="<div class=random-instructions style=margin:12px 0><h4>👨‍🍳 做法</h4><p>"+(r.instructions||"暂无")+"</p></div>";if(r.garnish)h+="<div style=font-size:.85rem;margin-top:12px><span style=font-size:.85rem;color:var(--text2);font-weight:500>🌿 装饰</span><p style=margin-top:4px>"+esc(r.garnish)+"</p></div>";h+="</div>";document.getElementById("detail-content").innerHTML=h;if(m.length){btn.style.display="none"}else{btn.style.display="inline-flex";btn.onclick=function(){closeModal("recipe-detail");makeDrink(id)}};showModal("recipe-detail")}
+highlightNav()
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script>
+</body>
+</html>
