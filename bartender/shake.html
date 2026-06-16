@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🎲 摇一杯 - 调酒库</title>
+<link rel="stylesheet" href="style.css">
+<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><link rel=apple-touch-icon href=icons/icon-192.svg></head>
+<body>
+<header>
+<div class="header-inner">
+<div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
+<nav>
+<a href="index.html">🏠</a>
+<a href="cabinet.html">🍾 酒柜</a>
+<a href="recipes.html">📖 配方</a>
+<a href="shake.html" class="active">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+</div>
+</header>
+<main>
+<div class="page-title">🎲 摇一杯</div>
+<div class="card">
+<div class="card-header"><h2>今天喝什么？</h2><button class="btn btn-outline btn-sm" onclick="randomDrink()">🔄 重新摇</button></div>
+<div id="shake-result"><div class="empty-state"><div class="empty-icon">🎲</div><p>点击下面按钮摇一杯</p><button class="btn btn-primary" style="margin-top:12px" onclick="randomDrink()">🎲 摇一杯！</button></div></div>
+</div>
+</main>
+
+<div class="modal-overlay" id="modal-brand">
+<div class="modal">
+<h3>🥂 选择品牌</h3>
+<div class="modal-sub" id="brand-recipe-name">为这杯酒选择品牌</div>
+<div id="brand-pick-list"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('brand')">取消</button><button class="btn btn-primary" onclick="confirmBrandPick()">确认制作</button></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="common.js"></script>
+<script>
+function randomDrink(){const r=DB.get("recipes"),el=document.getElementById("shake-result");if(!r.length){el.innerHTML="<div class=empty-state><div class=empty-icon>🍸</div><p>还没有配方</p><button class='btn btn-primary' style=margin-top:12px onclick=location.href='recipes.html'>去添加配方</button></div>";return};showDrink(r[Math.floor(Math.random()*r.length)])}
+function showDrink(r){const miss=checkMissing(r);const el=document.getElementById("shake-result");let q=String.fromCharCode(34);let h="<div class=random-result><div style=font-size:3rem;margin-bottom:8px>🎲</div><div class=random-name>"+esc(r.name)+"</div>";if(r.glass)h+="<div class=random-glass>🍸 "+esc(r.glass)+"</div>";h+="<div class=random-ingredients><h4>🥃 配料</h4><ul>"+r.ingredients.map(i=>"<li>"+esc(i.name)+" — "+i.amount+" "+(i.unit||"ml")+(miss.find(x=>x.name===i.name)?" <span class=missing-badge>缺</span>":"")+"</li>").join("")+"</ul></div><div class=random-instructions><h4>👨‍🍳 做法</h4><p>"+(r.instructions||"暂无")+"</p></div>";if(r.garnish)h+="<div class=random-instructions><h4>🌿 装饰</h4><p>"+esc(r.garnish)+"</p></div>";if(miss.length)h+="<div style=background:#fff5f5;border:1px solid #f5c6cb;border-radius:8px;padding:12px;margin:16px 0;text-align:center;font-size:.85rem;color:var(--warn)>⚠️ 缺少 "+miss.map(m=>esc(m.name)).join("、")+"<br><span style=font-size:.78rem>材料不足，换一杯吧</span></div>";h+="<div class=random-actions><button class='btn btn-outline' onclick=randomDrink()>🔄 换一杯</button>";if(!miss.length)h+="<button class='btn btn-primary' onclick=makeDrink("+q+r.id+q+")>🥂 干了这杯！</button>";h+="</div></div>";el.innerHTML=h}
+highlightNav()
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>
+</html>

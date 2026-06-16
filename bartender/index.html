@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🍸 调酒库</title>
+<link rel="stylesheet" href="style.css">
+<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><link rel=apple-touch-icon href=icons/icon-192.svg></head>
+<body>
+<header>
+<div class="header-inner">
+<div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
+<nav>
+<a href="index.html" class="active">🏠</a>
+<a href="cabinet.html">🍾 酒柜</a>
+<a href="recipes.html">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+</div>
+</header>
+<main>
+<div class="nav-grid">
+<a href="cabinet.html" class="nav-card"><div class="icon">🍾</div><div class="label">酒柜</div><div class="desc">管理你的存酒</div></a>
+<a href="recipes.html" class="nav-card"><div class="icon">📖</div><div class="label">配方</div><div class="desc">管理鸡尾酒配方</div></a>
+<a href="shake.html" class="nav-card"><div class="icon">🎲</div><div class="label">摇一杯</div><div class="desc">随机推荐一杯酒</div></a>
+<a href="make.html" class="nav-card"><div class="icon">🔍</div><div class="label">做一杯</div><div class="desc">搜索配方并制作</div></a>
+<a href="log.html" class="nav-card"><div class="icon">📋</div><div class="label">记录</div><div class="desc">饮用历史记录</div></a>
+</div>
+<div class="footer-link" style="margin-top:20px">🧪 <button onclick="resetSampleData()">重置示例数据</button></div>
+</main>
+<script src="common.js"></script>
+<script>highlightNav()</script>
+<div class="toast" id="toast"></div>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>
+</html>

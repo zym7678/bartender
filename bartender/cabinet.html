@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🍾 酒柜 - 调酒库</title>
+<link rel="stylesheet" href="style.css">
+<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><link rel=apple-touch-icon href=icons/icon-192.svg></head>
+<body>
+<header>
+<div class="header-inner">
+<div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
+<nav>
+<a href="index.html">🏠</a>
+<a href="cabinet.html" class="active">🍾 酒柜</a>
+<a href="recipes.html">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+</div>
+</header>
+<main>
+<div class="page-title">🍾 我的酒柜</div>
+<div class="card">
+<div class="card-header"><h2>所有存酒</h2><button class="btn btn-primary" onclick="showCabinetModal()">+ 添加酒</button></div>
+<div id="cabinet-list"></div>
+</div>
+</main>
+
+<div class="modal-overlay" id="modal-cabinet">
+<div class="modal">
+<h3 id="cabinet-modal-title">添加酒</h3>
+<div class="form-group"><label>酒的类型</label><input type="text" id="cabinet-type" placeholder="金酒、威士忌..." list="type-suggest"><datalist id="type-suggest"></datalist></div>
+<div class="form-group"><label>品牌</label><input type="text" id="cabinet-brand" placeholder="孟买蓝宝石、杰克丹尼..."></div>
+<div class="form-group"><label>开封日期</label><input type="date" id="cabinet-date"></div>
+<div class="form-row" style="gap:12px">
+<div class="form-group" style="flex:1"><label>总量 (ml)</label><input type="number" id="cabinet-total" placeholder="750" min="1"></div>
+<div class="form-group" style="flex:1"><label>当前剩余</label><input type="number" id="cabinet-remaining" placeholder="750" min="0"></div>
+</div>
+<input type="hidden" id="cabinet-edit-id">
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('cabinet')">取消</button><button class="btn btn-primary" onclick="saveCabinetHandler()">保存</button></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="common.js"></script>
+<script>
+function renderCabinet(){const l=document.getElementById("cabinet-list"),items=DB.get("cabinet");if(!items.length){l.innerHTML="<div class=empty-state><div class=empty-icon>🍾</div><p>酒柜还是空的</p></div>";return}
+l.innerHTML=items.map(i=>{const p=Math.round((i.remaining/i.total)*100);let c="progress-fill";if(p<=20)c+=" low";else if(p<=40)c+=" mid";return"<div class=item><div class=item-info><div class=item-name>"+esc(i.type)+" <span style=font-weight:400;font-size:.82rem;color:var(--text2)>"+esc(i.brand)+"</span></div><div class=item-brand><span>📅 "+i.openedDate+"</span></div><div class=item-meta>剩余 "+i.remaining+" / "+i.total+" ml</div><div class=progress-bar><div class='"+c+"' style=width:"+p+"%></div></div></div><div class=item-actions><button class=btn-icon onclick=editCabinet(\""+i.id+"\") title=编辑>✏️</button><button class=btn-icon onclick=deleteCabinet(\""+i.id+"\") title=删除>🗑️</button></div></div>"}).join("")}
+function showCabinetModal(){document.getElementById("cabinet-modal-title").textContent="添加酒";document.getElementById("cabinet-edit-id").value="";document.getElementById("cabinet-type").value="";document.getElementById("cabinet-brand").value="";document.getElementById("cabinet-date").value=DB.today();document.getElementById("cabinet-total").value="";document.getElementById("cabinet-remaining").value="";updateTypeSuggest();showModal("cabinet")}
+function editCabinet(id){const i=DB.get("cabinet").find(x=>x.id===id);if(!i)return;document.getElementById("cabinet-modal-title").textContent="编辑酒";document.getElementById("cabinet-edit-id").value=id;document.getElementById("cabinet-type").value=i.type;document.getElementById("cabinet-brand").value=i.brand;document.getElementById("cabinet-date").value=i.openedDate;document.getElementById("cabinet-total").value=i.total;document.getElementById("cabinet-remaining").value=i.remaining;updateTypeSuggest();showModal("cabinet")}
+function saveCabinetHandler(){const id=document.getElementById("cabinet-edit-id").value,type=document.getElementById("cabinet-type").value.trim(),brand=document.getElementById("cabinet-brand").value.trim(),d=document.getElementById("cabinet-date").value,t=parseFloat(document.getElementById("cabinet-total").value),r=parseFloat(document.getElementById("cabinet-remaining").value);if(!type||!brand||!t||r===undefined){toast("请填写完整","warn");return}if(r>t){toast("剩余不能大于总量","warn");return}
+saveCabinet(id,type,brand,d,t,r);closeModal("cabinet");toast(id?"已更新":"已添加","ok");renderCabinet()}
+function updateTypeSuggest(){const t=getTypeSuggest();document.getElementById("type-suggest").innerHTML=t.map(x=>"<option value="+esc(x)+">").join("")}
+highlightNav();renderCabinet()
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>
+</html>
