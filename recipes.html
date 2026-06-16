@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -44,14 +44,110 @@
 <div class="toast" id="toast"></div>
 <script src="common.js"></script>
 <script>
-function renderRecipes(){const l=document.getElementById("recipe-list"),r=DB.get("recipes");if(!r.length){l.innerHTML="<div class=empty-state><div class=empty-icon>📖</div><p>还没有配方</p></div>";return}
-l.innerHTML=r.map(x=>"<div class=recipe-preview><div class=recipe-preview-header><span class=recipe-preview-name>🍸 "+esc(x.name)+"</span><div class=item-actions><button class=btn-icon onclick=editRecipe(\""+x.id+"\") title=编辑>✏️</button><button class=btn-icon onclick=deleteRecipe(\""+x.id+"\") title=删除>🗑️</button></div></div><div class=recipe-preview-meta>"+x.ingredients.length+" 种 · "+(x.glass||"未选杯型")+"</div><div class=recipe-preview-tags>"+x.ingredients.slice(0,4).map(i=>"<span class=tag>"+esc(i.name)+"</span>").join("")+(x.ingredients.length>4?"<span class=tag>+"+(x.ingredients.length-4)+"</span>":"")+"</div></div>").join("")}
-function showRecipeModal(){document.getElementById("recipe-modal-title").textContent="添加配方";document.getElementById("recipe-edit-id").value="";document.getElementById("recipe-name").value="";document.getElementById("recipe-glass").value="";document.getElementById("recipe-instructions").value="";document.getElementById("recipe-garnish").value="";document.getElementById("ingredient-list").innerHTML="";addIngredientField();showModal("recipe")}
-function editRecipe(id){const r=DB.get("recipes").find(i=>i.id===id);if(!r)return;document.getElementById("recipe-modal-title").textContent="编辑配方";document.getElementById("recipe-edit-id").value=id;document.getElementById("recipe-name").value=r.name;document.getElementById("recipe-glass").value=r.glass||"";document.getElementById("recipe-instructions").value=r.instructions||"";document.getElementById("recipe-garnish").value=r.garnish||"";document.getElementById("ingredient-list").innerHTML="";r.ingredients.forEach(i=>addIngredientField(i.name,i.amount,i.unit));if(!r.ingredients.length)addIngredientField();showModal("recipe")}
-function saveRecipeHandler(){const id=document.getElementById("recipe-edit-id").value,n=document.getElementById("recipe-name").value.trim(),g=document.getElementById("recipe-glass").value.trim(),i=document.getElementById("recipe-instructions").value.trim(),ga=document.getElementById("recipe-garnish").value.trim();const rows=document.querySelectorAll(".ingredient-row"),ings=[];rows.forEach(r=>{const n=r.querySelector(".ing-name").value.trim(),a=parseFloat(r.querySelector(".ing-amount").value),u=r.querySelector(".ing-unit").value.trim()||"ml";if(n&&a)ings.push({name:n,amount:a,unit:u})});if(!n||!ings.length){toast("请填写名称和至少一种配料","warn");return}
-saveRecipe(id,n,g,i,ga,ings);closeModal("recipe");toast(id?"已更新":"已添加","ok");renderRecipes()}
-function addIngredientField(n,a,u){if(u===undefined)u="ml";if(n===undefined)n="";if(a===undefined)a="";const d=document.createElement("div");d.className="form-row ingredient-row";d.style.marginBottom="8px";d.innerHTML="<input class=ing-name placeholder=名称 value=\""+esc(n)+"\" style=flex:2><input class=ing-amount type=number placeholder=用量 value="+a+" style=flex:1;width:70px min=0 step=5><input class=ing-unit placeholder=ml value=\""+esc(u)+"\" style=width:50px;flex:none><button class=btn-icon onclick=this.parentElement.remove() title=移除>✕</button>";document.getElementById("ingredient-list").appendChild(d)}
-highlightNav();renderRecipes()
+function renderRecipes() {
+  const list = document.getElementById("recipe-list");
+  const recipes = DB.get("recipes");
+  if (!recipes.length) {
+    list.innerHTML = "<div class=empty-state><div class=empty-icon>📖</div><p>还没有配方</p></div>";
+    return;
+  }
+
+  list.innerHTML = recipes.map((recipe) =>
+    "<div class=recipe-preview><div class=recipe-preview-header><span class=recipe-preview-name>🍸 " +
+    esc(recipe.name) +
+    "</span><div class=item-actions><button class=btn-icon onclick=editRecipe(\"" + recipe.id +
+    "\") title=编辑>✏️</button><button class=btn-icon onclick=deleteRecipe(\"" + recipe.id +
+    "\") title=删除>🗑️</button></div></div><div class=recipe-preview-meta>" + recipe.ingredients.length +
+    " 种 · " + (recipe.glass || "未选杯型") + "</div><div class=recipe-preview-tags>" +
+    recipe.ingredients.slice(0, 4).map((ingredient) => "<span class=tag>" + esc(ingredient.name) + "</span>").join("") +
+    (recipe.ingredients.length > 4 ? "<span class=tag>+" + (recipe.ingredients.length - 4) + "</span>" : "") +
+    "</div></div>"
+  ).join("");
+}
+
+function showRecipeModal() {
+  document.getElementById("recipe-modal-title").textContent = "添加配方";
+  document.getElementById("recipe-edit-id").value = "";
+  document.getElementById("recipe-name").value = "";
+  document.getElementById("recipe-glass").value = "";
+  document.getElementById("recipe-instructions").value = "";
+  document.getElementById("recipe-garnish").value = "";
+  document.getElementById("ingredient-list").innerHTML = "";
+  addIngredientField();
+  showModal("recipe");
+}
+
+function editRecipe(id) {
+  const recipe = DB.get("recipes").find((item) => item.id === id);
+  if (!recipe) return;
+  document.getElementById("recipe-modal-title").textContent = "编辑配方";
+  document.getElementById("recipe-edit-id").value = id;
+  document.getElementById("recipe-name").value = recipe.name;
+  document.getElementById("recipe-glass").value = recipe.glass || "";
+  document.getElementById("recipe-instructions").value = recipe.instructions || "";
+  document.getElementById("recipe-garnish").value = recipe.garnish || "";
+  document.getElementById("ingredient-list").innerHTML = "";
+  recipe.ingredients.forEach((ingredient) => addIngredientField(ingredient.name, ingredient.amount, ingredient.unit));
+  if (!recipe.ingredients.length) addIngredientField();
+  showModal("recipe");
+}
+
+function saveRecipeHandler() {
+  const id = document.getElementById("recipe-edit-id").value;
+  const name = document.getElementById("recipe-name").value.trim();
+  const glass = document.getElementById("recipe-glass").value.trim();
+  const instructions = document.getElementById("recipe-instructions").value.trim();
+  const garnish = document.getElementById("recipe-garnish").value.trim();
+  const rows = document.querySelectorAll(".ingredient-row");
+  const ingredients = [];
+  let hasInvalidIngredient = false;
+
+  rows.forEach((row) => {
+    const ingredientName = row.querySelector(".ing-name").value.trim();
+    const rawAmount = row.querySelector(".ing-amount").value.trim();
+    const amount = parseFloat(rawAmount);
+    const unit = row.querySelector(".ing-unit").value.trim() || "ml";
+
+    if (!ingredientName && !rawAmount) return;
+    if (!ingredientName || !Number.isFinite(amount) || amount <= 0) {
+      hasInvalidIngredient = true;
+      return;
+    }
+
+    ingredients.push({ name: ingredientName, amount, unit });
+  });
+
+  if (hasInvalidIngredient) {
+    toast("配料名称和用量必须填写完整", "warn");
+    return;
+  }
+  if (!name || !ingredients.length) {
+    toast("请填写名称和至少一种配料", "warn");
+    return;
+  }
+
+  saveRecipe(id, name, glass, instructions, garnish, ingredients);
+  closeModal("recipe");
+  toast(id ? "已更新" : "已添加", "ok");
+  renderRecipes();
+}
+
+function addIngredientField(name, amount, unit) {
+  const safeName = name === undefined ? "" : name;
+  const safeAmount = amount === undefined ? "" : String(amount);
+  const safeUnit = unit === undefined ? "ml" : unit;
+  const row = document.createElement("div");
+  row.className = "form-row ingredient-row";
+  row.style.marginBottom = "8px";
+  row.innerHTML = "<input class=ing-name placeholder=名称 value=\"" + esc(safeName) +
+    "\" style=flex:2><input class=ing-amount type=number placeholder=用量 value=\"" + esc(safeAmount) +
+    "\" style=flex:1;width:70px min=0 step=0.5><input class=ing-unit placeholder=ml value=\"" + esc(safeUnit) +
+    "\" style=width:50px;flex:none><button class=btn-icon onclick=this.parentElement.remove() title=移除>✕</button>";
+  document.getElementById("ingredient-list").appendChild(row);
+}
+
+highlightNav();
+renderRecipes();
 </script>
 <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>
 </html>

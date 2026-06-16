@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -58,14 +58,85 @@
 <div class="toast" id="toast"></div>
 <script src="common.js"></script>
 <script>
-let searchMode="name"
-document.querySelectorAll("#search-tabs button").forEach(b=>{b.addEventListener("click",()=>{document.querySelectorAll("#search-tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");searchMode=b.dataset.mode;document.getElementById("search-input").placeholder=searchMode==="name"?"输入鸡尾酒名称...":"输入基酒名称..."})})
-document.getElementById("search-input").addEventListener("keydown",e=>{if(e.key==="Enter")doSearch()})
-function doSearch(){const q=document.getElementById("search-input").value.trim().toLowerCase();const el=document.getElementById("search-results"),all=DB.get("recipes");if(!q){el.innerHTML="<div class=empty-state><div class=empty-icon>🔍</div><p>输入关键词搜索</p></div>";return}
-const res=searchMode==="name"?all.filter(r=>r.name.toLowerCase().includes(q)):all.filter(r=>r.ingredients.some(i=>i.name.toLowerCase().includes(q)));if(!res.length){el.innerHTML="<div class=empty-state><div class=empty-icon>🔍</div><p>没有找到匹配的配方</p></div>";return}
-let q2=String.fromCharCode(34);el.innerHTML="<p style=font-size:.82rem;color:var(--text2);margin-bottom:12px>找到 "+res.length+" 个</p>"+res.map(r=>{const m=checkMissing(r);return"<div class=recipe-preview><div class=recipe-preview-header><span class=recipe-preview-name>🍸 "+esc(r.name)+"</span></div><div class=recipe-preview-meta>"+r.ingredients.map(i=>esc(i.name)).join(" · ")+"</div><div class=recipe-preview-tags style=margin-top:4px>"+(m.length?"<span style=color:var(--warn);font-size:.78rem>⚠️ 缺 "+m.map(x=>esc(x.name)).join("、")+"</span>":"<span style=color:var(--ok);font-size:.78rem>✅ 材料齐全</span>")+"</div><div class=search-actions><button class='btn btn-outline btn-sm' onclick=showRecipeDetail("+q2+r.id+q2+")>查看配方</button>"+(m.length?"":"<button class='btn btn-primary btn-sm' onclick=makeDrink("+q2+r.id+q2+")>做这杯</button>")+"</div></div>"}).join("")}
-function showRecipeDetail(id){const r=DB.get("recipes").find(x=>x.id===id);if(!r)return;const m=checkMissing(r);const btn=document.getElementById("detail-make-btn");document.getElementById("detail-name").textContent="🍸 "+r.name;let q2=String.fromCharCode(34);let h="<div style=margin-bottom:16px>";if(r.glass)h+="<div style=font-size:.82rem;color:var(--text2);margin-bottom:4px>🍸 杯型: "+esc(r.glass)+"</div>";h+="<div class=random-ingredients style=margin:12px 0><h4>🥃 配料</h4><ul>"+r.ingredients.map(i=>"<li>"+esc(i.name)+" — "+i.amount+" "+(i.unit||"ml")+"</li>").join("")+"</ul></div>";h+="<div class=random-instructions style=margin:12px 0><h4>👨‍🍳 做法</h4><p>"+(r.instructions||"暂无")+"</p></div>";if(r.garnish)h+="<div style=font-size:.85rem;margin-top:12px><span style=font-size:.85rem;color:var(--text2);font-weight:500>🌿 装饰</span><p style=margin-top:4px>"+esc(r.garnish)+"</p></div>";h+="</div>";document.getElementById("detail-content").innerHTML=h;if(m.length){btn.style.display="none"}else{btn.style.display="inline-flex";btn.onclick=function(){closeModal("recipe-detail");makeDrink(id)}};showModal("recipe-detail")}
-highlightNav()
+function formatRecipeText(text) {
+  return esc(text || "暂无").replace(/\n/g, "<br>");
+}
+
+let searchMode = "name";
+document.querySelectorAll("#search-tabs button").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("#search-tabs button").forEach((entry) => entry.classList.remove("active"));
+    button.classList.add("active");
+    searchMode = button.dataset.mode;
+    document.getElementById("search-input").placeholder = searchMode === "name" ? "输入鸡尾酒名称..." : "输入基酒名称...";
+  });
+});
+
+document.getElementById("search-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") doSearch();
+});
+
+function doSearch() {
+  const query = document.getElementById("search-input").value.trim().toLowerCase();
+  const element = document.getElementById("search-results");
+  const all = DB.get("recipes");
+  if (!query) {
+    element.innerHTML = "<div class=empty-state><div class=empty-icon>🔍</div><p>输入关键词搜索</p></div>";
+    return;
+  }
+
+  const results = searchMode === "name"
+    ? all.filter((recipe) => recipe.name.toLowerCase().includes(query))
+    : all.filter((recipe) => recipe.ingredients.some((ingredient) => ingredient.name.toLowerCase().includes(query)));
+
+  if (!results.length) {
+    element.innerHTML = "<div class=empty-state><div class=empty-icon>🔍</div><p>没有找到匹配的配方</p></div>";
+    return;
+  }
+
+  const quote = String.fromCharCode(34);
+  element.innerHTML = "<p style=font-size:.82rem;color:var(--text2);margin-bottom:12px>找到 " + results.length + " 个</p>" +
+    results.map((recipe) => {
+      const missing = checkMissing(recipe);
+      return "<div class=recipe-preview><div class=recipe-preview-header><span class=recipe-preview-name>🍸 " + esc(recipe.name) +
+        "</span></div><div class=recipe-preview-meta>" + recipe.ingredients.map((ingredient) => esc(ingredient.name)).join(" · ") +
+        "</div><div class=recipe-preview-tags style=margin-top:4px>" +
+        (missing.length ? "<span style=color:var(--warn);font-size:.78rem>⚠️ 缺 " + missing.map((item) => esc(item.name)).join("、") + "</span>" : "<span style=color:var(--ok);font-size:.78rem>✅ 材料齐全</span>") +
+        "</div><div class=search-actions><button class='btn btn-outline btn-sm' onclick=showRecipeDetail(" + quote + recipe.id + quote + ")>查看配方</button>" +
+        (missing.length ? "" : "<button class='btn btn-primary btn-sm' onclick=makeDrink(" + quote + recipe.id + quote + ")>做这杯</button>") +
+        "</div></div>";
+    }).join("");
+}
+
+function showRecipeDetail(id) {
+  const recipe = DB.get("recipes").find((item) => item.id === id);
+  if (!recipe) return;
+  const missing = checkMissing(recipe);
+  const button = document.getElementById("detail-make-btn");
+  document.getElementById("detail-name").textContent = "🍸 " + recipe.name;
+
+  let html = "<div style=margin-bottom:16px>";
+  if (recipe.glass) html += "<div style=font-size:.82rem;color:var(--text2);margin-bottom:4px>🍸 杯型: " + esc(recipe.glass) + "</div>";
+  html += "<div class=random-ingredients style=margin:12px 0><h4>🥃 配料</h4><ul>" +
+    recipe.ingredients.map((ingredient) => "<li>" + esc(ingredient.name) + " — " + ingredient.amount + " " + (ingredient.unit || "ml") + "</li>").join("") +
+    "</ul></div><div class=random-instructions style=margin:12px 0><h4>👨‍🍳 做法</h4><p>" + formatRecipeText(recipe.instructions) + "</p></div>";
+  if (recipe.garnish) html += "<div style=font-size:.85rem;margin-top:12px><span style=font-size:.85rem;color:var(--text2);font-weight:500>🌿 装饰</span><p style=margin-top:4px>" + formatRecipeText(recipe.garnish) + "</p></div>";
+  html += "</div>";
+
+  document.getElementById("detail-content").innerHTML = html;
+  if (missing.length) {
+    button.style.display = "none";
+  } else {
+    button.style.display = "inline-flex";
+    button.onclick = function () {
+      closeModal("recipe-detail");
+      makeDrink(id);
+    };
+  }
+  showModal("recipe-detail");
+}
+
+highlightNav();
 </script>
 <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script>
 </body>
