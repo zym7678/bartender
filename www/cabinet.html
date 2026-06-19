@@ -1,23 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>🍾 酒柜 - 调酒库</title>
 <link rel="stylesheet" href="style.css">
-<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=default><link rel=apple-touch-icon href=icons/icon-180.png sizes=180x180><link rel=apple-touch-icon href=icons/icon-192.png sizes=192x192></head>
+<link rel=manifest href=manifest.json><meta name=theme-color content=#0b0907><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=black-translucent><link rel=apple-touch-icon href=icons/icon-180.png sizes=180x180><link rel=apple-touch-icon href=icons/icon-192.png sizes=192x192></head>
 <body>
 <header>
 <div class="header-inner">
 <div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
-<nav>
-<a href="index.html">🏠</a>
-<a href="cabinet.html" class="active">🍾 酒柜</a>
-<a href="recipes.html">📖 配方</a>
-<a href="shake.html">🎲 摇一杯</a>
-<a href="make.html">🔍 做一杯</a>
-<a href="log.html">📋 记录</a>
-</nav>
 </div>
 </header>
 <main>
@@ -26,12 +18,26 @@
 <div class="card-header"><h2>所有存酒</h2><button class="btn btn-primary" onclick="showCabinetModal()">+ 添加酒</button></div>
 <div id="cabinet-list"></div>
 </div>
+<div class="footer-link">测试数据：<button onclick="clearCabinetData()">清空酒柜</button> / <button onclick="addSampleCabinetData()">添加测试数据</button></div>
 </main>
+
+<nav>
+<a href="cabinet.html" class="active">🍾 酒柜</a>
+<a href="recipes.html">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+
 
 <div class="modal-overlay" id="modal-cabinet">
 <div class="modal">
 <h3 id="cabinet-modal-title">添加酒</h3>
-<div class="form-group"><label>酒的类型</label><input type="text" id="cabinet-type" placeholder="金酒、威士忌..." list="type-suggest"><datalist id="type-suggest"></datalist></div>
+<div class="form-row" style="gap:12px">
+<div class="form-group" style="flex:1"><label>原料大类</label><select id="cabinet-category" onchange="updateCabinetIngredientOptions()"></select></div>
+<div class="form-group" style="flex:1"><label>原料小类</label><select id="cabinet-type" onchange="toggleCabinetCustomType()"></select></div>
+</div>
+<div class="form-group" id="cabinet-custom-wrap" style="display:none"><label>其他原料名称</label><input type="text" id="cabinet-custom-type" placeholder="例如自制香料糖浆"></div>
 <div class="form-group"><label>品牌</label><input type="text" id="cabinet-brand" placeholder="孟买蓝宝石、杰克丹尼..."></div>
 <div class="form-group"><label>开封日期</label><input type="date" id="cabinet-date"></div>
 <div class="form-row" style="gap:12px">
@@ -76,12 +82,15 @@ function renderCabinet() {
 function showCabinetModal() {
   document.getElementById("cabinet-modal-title").textContent = "添加酒";
   document.getElementById("cabinet-edit-id").value = "";
-  document.getElementById("cabinet-type").value = "";
+  updateTypeSuggest();
+  document.getElementById("cabinet-category").value = getIngredientCategories()[0];
+  updateCabinetIngredientOptions();
+  document.getElementById("cabinet-custom-type").value = "";
   document.getElementById("cabinet-brand").value = "";
   document.getElementById("cabinet-date").value = DB.today();
   document.getElementById("cabinet-total").value = "";
   document.getElementById("cabinet-remaining").value = "";
-  updateTypeSuggest();
+  toggleCabinetCustomType();
   showModal("cabinet");
 }
 
@@ -90,18 +99,26 @@ function editCabinet(id) {
   if (!item) return;
   document.getElementById("cabinet-modal-title").textContent = "编辑酒";
   document.getElementById("cabinet-edit-id").value = id;
-  document.getElementById("cabinet-type").value = item.type;
+  updateTypeSuggest();
+  document.getElementById("cabinet-category").value = item.category || "其他";
+  updateCabinetIngredientOptions(item.ingredientId || item.type);
+  if ((item.category || "") === "其他") {
+    document.getElementById("cabinet-custom-type").value = item.type;
+  }
   document.getElementById("cabinet-brand").value = item.brand;
   document.getElementById("cabinet-date").value = item.openedDate;
   document.getElementById("cabinet-total").value = item.total;
   document.getElementById("cabinet-remaining").value = item.remaining;
-  updateTypeSuggest();
+  toggleCabinetCustomType();
   showModal("cabinet");
 }
 
 function saveCabinetHandler() {
   const id = document.getElementById("cabinet-edit-id").value;
-  const type = document.getElementById("cabinet-type").value.trim();
+  const typeSelect = document.getElementById("cabinet-type");
+  const type = typeSelect.value === "custom"
+    ? document.getElementById("cabinet-custom-type").value.trim()
+    : typeSelect.options[typeSelect.selectedIndex].textContent.trim();
   const brand = document.getElementById("cabinet-brand").value.trim();
   const openedDate = document.getElementById("cabinet-date").value;
   const total = parseFloat(document.getElementById("cabinet-total").value);
@@ -127,11 +144,31 @@ function saveCabinetHandler() {
 }
 
 function updateTypeSuggest() {
-  const types = getTypeSuggest();
-  document.getElementById("type-suggest").innerHTML = types.map((type) => "<option value=\"" + esc(type) + "\">").join("");
+  document.getElementById("cabinet-category").innerHTML = getIngredientCategories()
+    .map((category) => "<option value=\"" + esc(category) + "\">" + esc(category) + "</option>")
+    .join("");
+}
+
+function updateCabinetIngredientOptions(selectedId) {
+  const category = document.getElementById("cabinet-category").value || getIngredientCategories()[0];
+  const options = getIngredientsByCategory(category);
+  document.getElementById("cabinet-type").innerHTML = options
+    .map((ingredient) => "<option value=\"" + esc(ingredient.id) + "\">" + esc(ingredient.name) + "</option>")
+    .join("");
+  if (selectedId) {
+    const option = [...document.getElementById("cabinet-type").options].find((entry) => entry.value === selectedId || entry.textContent === selectedId);
+    if (option) option.selected = true;
+  }
+  toggleCabinetCustomType();
+}
+
+function toggleCabinetCustomType() {
+  const isCustom = document.getElementById("cabinet-type").value === "custom";
+  document.getElementById("cabinet-custom-wrap").style.display = isCustom ? "block" : "none";
 }
 
 highlightNav();
+updateTypeSuggest();
 renderCabinet();
 </script>
 <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>

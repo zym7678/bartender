@@ -1,23 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>📖 配方 - 调酒库</title>
 <link rel="stylesheet" href="style.css">
-<link rel=manifest href=manifest.json><meta name=theme-color content=#d4a574><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=default><link rel=apple-touch-icon href=icons/icon-180.png sizes=180x180><link rel=apple-touch-icon href=icons/icon-192.png sizes=192x192></head>
+<link rel=manifest href=manifest.json><meta name=theme-color content=#0b0907><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=black-translucent><link rel=apple-touch-icon href=icons/icon-180.png sizes=180x180><link rel=apple-touch-icon href=icons/icon-192.png sizes=192x192></head>
 <body>
 <header>
 <div class="header-inner">
 <div><h1>🍸 <span>调酒库</span></h1><p>个人调酒管理工具</p></div>
-<nav>
-<a href="index.html">🏠</a>
-<a href="cabinet.html">🍾 酒柜</a>
-<a href="recipes.html" class="active">📖 配方</a>
-<a href="shake.html">🎲 摇一杯</a>
-<a href="make.html">🔍 做一杯</a>
-<a href="log.html">📋 记录</a>
-</nav>
 </div>
 </header>
 <main>
@@ -26,16 +18,32 @@
 <div class="card-header"><h2>所有配方</h2><button class="btn btn-primary" onclick="showRecipeModal()">+ 添加配方</button></div>
 <div id="recipe-list"></div>
 </div>
+<div class="footer-link">测试数据：<button onclick="clearRecipeData()">清空配方</button> / <button onclick="addSampleRecipeData()">添加测试数据</button></div>
 </main>
+
+<nav>
+<a href="cabinet.html">🍾 酒柜</a>
+<a href="recipes.html" class="active">📖 配方</a>
+<a href="shake.html">🎲 摇一杯</a>
+<a href="make.html">🔍 做一杯</a>
+<a href="log.html">📋 记录</a>
+</nav>
+
 
 <div class="modal-overlay" id="modal-recipe">
 <div class="modal">
 <h3 id="recipe-modal-title">添加配方</h3>
 <div class="form-group"><label>鸡尾酒名</label><input type="text" id="recipe-name" placeholder="尼格罗尼"></div>
-<div class="form-group"><label>选用杯型</label><input type="text" id="recipe-glass" placeholder="古典杯、马天尼杯"></div>
-<div class="form-group"><label>配料 <span style="font-weight:400;color:var(--text2);font-size:.78rem">输入酒的类型名</span></label><div id="ingredient-list"></div><button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addIngredientField()">+ 添加配料</button></div>
+<div class="form-row" style="gap:12px">
+<div class="form-group" style="flex:1"><label>选用杯型</label><select id="recipe-glass" onchange="toggleRecipeCustomGlass()"></select></div>
+<div class="form-group" id="recipe-glass-custom-wrap" style="display:none;flex:1"><label>其他杯型</label><input type="text" id="recipe-glass-custom" placeholder="例如酸酒杯"></div>
+</div>
+<div class="form-group"><label>配料 <span style="font-weight:400;color:var(--text2);font-size:.78rem">先选大类，再选小类</span></label><div id="ingredient-list"></div><button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addIngredientField()">+ 添加配料</button></div>
 <div class="form-group"><label>做法</label><textarea id="recipe-instructions" placeholder="将所有配料倒入搅拌杯加冰搅拌..."></textarea></div>
-<div class="form-group"><label>装饰（可选）</label><input type="text" id="recipe-garnish" placeholder="橙皮、樱桃"></div>
+<div class="form-row" style="gap:12px">
+<div class="form-group" style="flex:1"><label>装饰（可选）</label><select id="recipe-garnish" onchange="toggleRecipeCustomGarnish()"></select></div>
+<div class="form-group" id="recipe-garnish-custom-wrap" style="display:none;flex:1"><label>其他装饰</label><input type="text" id="recipe-garnish-custom" placeholder="例如迷迭香"></div>
+</div>
 <input type="hidden" id="recipe-edit-id">
 <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('recipe')">取消</button><button class="btn btn-primary" onclick="saveRecipeHandler()">保存</button></div>
 </div>
@@ -69,11 +77,16 @@ function showRecipeModal() {
   document.getElementById("recipe-modal-title").textContent = "添加配方";
   document.getElementById("recipe-edit-id").value = "";
   document.getElementById("recipe-name").value = "";
-  document.getElementById("recipe-glass").value = "";
+  populateGlassAndGarnishOptions();
+  document.getElementById("recipe-glass").value = "rocks";
+  document.getElementById("recipe-glass-custom").value = "";
   document.getElementById("recipe-instructions").value = "";
-  document.getElementById("recipe-garnish").value = "";
+  document.getElementById("recipe-garnish").value = "orange_peel";
+  document.getElementById("recipe-garnish-custom").value = "";
   document.getElementById("ingredient-list").innerHTML = "";
   addIngredientField();
+  toggleRecipeCustomGlass();
+  toggleRecipeCustomGarnish();
   showModal("recipe");
 }
 
@@ -83,27 +96,39 @@ function editRecipe(id) {
   document.getElementById("recipe-modal-title").textContent = "编辑配方";
   document.getElementById("recipe-edit-id").value = id;
   document.getElementById("recipe-name").value = recipe.name;
-  document.getElementById("recipe-glass").value = recipe.glass || "";
+  populateGlassAndGarnishOptions();
+  setSelectWithCustom("recipe-glass", "recipe-glass-custom", recipe.glassId, recipe.glass, "other");
   document.getElementById("recipe-instructions").value = recipe.instructions || "";
-  document.getElementById("recipe-garnish").value = recipe.garnish || "";
+  setSelectWithCustom("recipe-garnish", "recipe-garnish-custom", recipe.garnishId, recipe.garnish, "other");
   document.getElementById("ingredient-list").innerHTML = "";
-  recipe.ingredients.forEach((ingredient) => addIngredientField(ingredient.name, ingredient.amount, ingredient.unit));
+  recipe.ingredients.forEach((ingredient) => addIngredientField(ingredient));
   if (!recipe.ingredients.length) addIngredientField();
+  toggleRecipeCustomGlass();
+  toggleRecipeCustomGarnish();
   showModal("recipe");
 }
 
 function saveRecipeHandler() {
   const id = document.getElementById("recipe-edit-id").value;
   const name = document.getElementById("recipe-name").value.trim();
-  const glass = document.getElementById("recipe-glass").value.trim();
+  const glassSelect = document.getElementById("recipe-glass");
+  const glass = glassSelect.value === "other"
+    ? (document.getElementById("recipe-glass-custom").value.trim() || "其他杯型")
+    : glassSelect.options[glassSelect.selectedIndex].textContent.trim();
   const instructions = document.getElementById("recipe-instructions").value.trim();
-  const garnish = document.getElementById("recipe-garnish").value.trim();
+  const garnishSelect = document.getElementById("recipe-garnish");
+  const garnish = garnishSelect.value === "other"
+    ? document.getElementById("recipe-garnish-custom").value.trim()
+    : garnishSelect.options[garnishSelect.selectedIndex].textContent.trim();
   const rows = document.querySelectorAll(".ingredient-row");
   const ingredients = [];
   let hasInvalidIngredient = false;
 
   rows.forEach((row) => {
-    const ingredientName = row.querySelector(".ing-name").value.trim();
+    const ingredientSelect = row.querySelector(".ing-name");
+    const ingredientName = ingredientSelect.value === "custom"
+      ? row.querySelector(".ing-custom").value.trim()
+      : ingredientSelect.options[ingredientSelect.selectedIndex].textContent.trim();
     const rawAmount = row.querySelector(".ing-amount").value.trim();
     const amount = parseFloat(rawAmount);
     const unit = row.querySelector(".ing-unit").value.trim() || "ml";
@@ -118,7 +143,7 @@ function saveRecipeHandler() {
   });
 
   if (hasInvalidIngredient) {
-    toast("配料名称和用量必须填写完整", "warn");
+    toast("配料必须选择或填写原料，并填写有效用量", "warn");
     return;
   }
   if (!name || !ingredients.length) {
@@ -132,21 +157,90 @@ function saveRecipeHandler() {
   renderRecipes();
 }
 
-function addIngredientField(name, amount, unit) {
-  const safeName = name === undefined ? "" : name;
-  const safeAmount = amount === undefined ? "" : String(amount);
-  const safeUnit = unit === undefined ? "ml" : unit;
+function addIngredientField(source, amount, unit) {
+  const ingredient = typeof source === "object" && source ? source : { name: source, amount, unit };
+  const safeAmount = ingredient.amount === undefined ? "" : String(ingredient.amount);
+  const safeUnit = ingredient.unit === undefined ? "ml" : ingredient.unit;
   const row = document.createElement("div");
-  row.className = "form-row ingredient-row";
-  row.style.marginBottom = "8px";
-  row.innerHTML = "<input class=ing-name placeholder=名称 value=\"" + esc(safeName) +
-    "\" style=flex:2><input class=ing-amount type=number placeholder=用量 value=\"" + esc(safeAmount) +
-    "\" style=flex:1;width:70px min=0 step=0.5><input class=ing-unit placeholder=ml value=\"" + esc(safeUnit) +
-    "\" style=width:50px;flex:none><button class=btn-icon onclick=this.parentElement.remove() title=移除>✕</button>";
+  row.className = "ingredient-row";
+  row.innerHTML =
+    "<div class=form-row style='gap:8px;margin-bottom:8px'>" +
+    "<select class=ing-category onchange=updateIngredientRow(this.parentElement.parentElement)></select>" +
+    "<select class=ing-name onchange=toggleIngredientCustom(this.parentElement.parentElement)></select>" +
+    "</div><div class=form-row style='gap:8px;margin-bottom:8px'>" +
+    "<input class=ing-custom placeholder=其他原料名称 style='display:none;flex:2'>" +
+    "<input class=ing-amount type=number placeholder=用量 value=\"" + esc(safeAmount) + "\" min=0 step=0.5>" +
+    "<input class=ing-unit placeholder=ml value=\"" + esc(safeUnit) + "\" style='width:58px;flex:none'>" +
+    "<button class=btn-icon onclick=this.parentElement.parentElement.remove() title=移除>✕</button></div>";
   document.getElementById("ingredient-list").appendChild(row);
+  setupIngredientRow(row, ingredient);
+}
+
+function populateGlassAndGarnishOptions() {
+  document.getElementById("recipe-glass").innerHTML = getStandardGlasses()
+    .map((glass) => "<option value=\"" + esc(glass.id) + "\">" + esc(glass.name) + "</option>")
+    .join("");
+  document.getElementById("recipe-garnish").innerHTML = getStandardGarnishes()
+    .map((garnish) => "<option value=\"" + esc(garnish.id) + "\">" + esc(garnish.name) + "</option>")
+    .join("");
+}
+
+function setSelectWithCustom(selectId, customId, savedId, savedName, fallbackId) {
+  const select = document.getElementById(selectId);
+  const custom = document.getElementById(customId);
+  const option = [...select.options].find((entry) => entry.value === savedId || entry.textContent === savedName);
+  if (option && option.value !== fallbackId) {
+    option.selected = true;
+    custom.value = "";
+  } else {
+    select.value = fallbackId;
+    custom.value = savedName || "";
+  }
+}
+
+function toggleRecipeCustomGlass() {
+  document.getElementById("recipe-glass-custom-wrap").style.display =
+    document.getElementById("recipe-glass").value === "other" ? "block" : "none";
+}
+
+function toggleRecipeCustomGarnish() {
+  document.getElementById("recipe-garnish-custom-wrap").style.display =
+    document.getElementById("recipe-garnish").value === "other" ? "block" : "none";
+}
+
+function setupIngredientRow(row, ingredient) {
+  const categorySelect = row.querySelector(".ing-category");
+  categorySelect.innerHTML = getIngredientCategories()
+    .map((category) => "<option value=\"" + esc(category) + "\">" + esc(category) + "</option>")
+    .join("");
+  categorySelect.value = ingredient.category || (getStandardIngredient(ingredient.name) || {}).category || getIngredientCategories()[0];
+  updateIngredientRow(row, ingredient.ingredientId || ingredient.name);
+  if ((ingredient.category || "") === "其他") {
+    row.querySelector(".ing-custom").value = ingredient.name || "";
+  }
+  toggleIngredientCustom(row);
+}
+
+function updateIngredientRow(row, selectedId) {
+  const category = row.querySelector(".ing-category").value;
+  const select = row.querySelector(".ing-name");
+  select.innerHTML = getIngredientsByCategory(category)
+    .map((ingredient) => "<option value=\"" + esc(ingredient.id) + "\">" + esc(ingredient.name) + "</option>")
+    .join("");
+  if (selectedId) {
+    const option = [...select.options].find((entry) => entry.value === selectedId || entry.textContent === selectedId);
+    if (option) option.selected = true;
+  }
+  toggleIngredientCustom(row);
+}
+
+function toggleIngredientCustom(row) {
+  const isCustom = row.querySelector(".ing-name").value === "custom";
+  row.querySelector(".ing-custom").style.display = isCustom ? "block" : "none";
 }
 
 highlightNav();
+populateGlassAndGarnishOptions();
 renderRecipes();
 </script>
 <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js")}</script></body>

@@ -1,6 +1,6 @@
 ﻿*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#faf8f5;--card:#fff;--text:#2c2c2c;--text2:#888;--accent:#d4a574;--accent2:#e8d5c4;--warn:#c0392b;--ok:#27ae60;--shadow:0 2px 12px rgba(0,0,0,.06);--radius:12px;--radius-sm:8px;--font:"-apple-system","PingFang SC","Microsoft YaHei",sans-serif}
-html{font-size:16px;line-height:1.6}
+ html{font-size:16px;line-height:1.6;overflow-y:auto;height:100%}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
 header{background:var(--card);border-bottom:1px solid #eee;position:sticky;top:0;z-index:50}
 .header-inner{max-width:800px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
