@@ -1,0 +1,8 @@
+﻿# 临时文件
+build.js
+script.js
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db

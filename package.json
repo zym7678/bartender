@@ -1,0 +1,20 @@
+﻿{
+  "name": "bartender",
+  "version": "1.0.0",
+  "private": true,
+  "description": "调酒库 - 个人调酒管理工具",
+  "scripts": {
+    "sync": "npx cap sync",
+    "sync:android": "npx cap sync android",
+    "build:android": "cd android && gradlew assembleDebug",
+    "build:release": "cd android && gradlew assembleRelease",
+    "open:android": "npx cap open android",
+    "icons": "node scripts/gen-icons.js"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "sharp": "^0.34.0"
+  }
+}

@@ -1,0 +1,15 @@
+﻿{
+  "appId": "com.bartender.app",
+  "appName": "调酒库",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#faf8f5"
+    }
+  }
+}
