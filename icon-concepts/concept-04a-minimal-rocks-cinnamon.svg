@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="144" y1="88" x2="880" y2="940" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22140d"/>
+      <stop offset=".55" stop-color="#090806"/>
+      <stop offset="1" stop-color="#180c08"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="306" y1="236" x2="718" y2="762" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff4cf"/>
+      <stop offset=".42" stop-color="#f2c982"/>
+      <stop offset="1" stop-color="#8f5a33"/>
+    </linearGradient>
+    <linearGradient id="drink" x1="376" y1="442" x2="650" y2="686" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffc86b"/>
+      <stop offset=".48" stop-color="#d9792f"/>
+      <stop offset="1" stop-color="#6d2d17"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="242" y1="714" x2="800" y2="842" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3a1e12"/>
+      <stop offset=".46" stop-color="#7a4426"/>
+      <stop offset="1" stop-color="#2a150d"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="30" stdDeviation="28" flood-color="#000000" flood-opacity=".48"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <circle cx="512" cy="474" r="306" fill="#d89b57" opacity=".09"/>
+  <g filter="url(#shadow)">
+    <path d="M248 746c146-38 378-44 532-8 32 8 42 52 14 70-121 78-451 78-572 0-27-17-8-54 26-62Z" fill="url(#wood)"/>
+    <path d="M318 777c86-24 276-28 386-6" fill="none" stroke="#d49a5b" stroke-width="10" stroke-linecap="round" opacity=".34"/>
+    <path d="M438 806c-36 14-84 16-132 4" fill="none" stroke="#1b0d08" stroke-width="11" stroke-linecap="round" opacity=".62"/>
+    <path d="M632 744c52-6 92-3 126 10" fill="none" stroke="#1b0d08" stroke-width="10" stroke-linecap="round" opacity=".52"/>
+    <path d="M356 318h312l-54 356c-8 52-46 86-102 86s-94-34-102-86L356 318Z" fill="#100b08" stroke="url(#glass)" stroke-width="38" stroke-linejoin="round"/>
+    <path d="M392 488h240l-28 166c-6 38-40 64-92 64s-86-26-92-64l-28-166Z" fill="url(#drink)"/>
+    <path d="M404 522c58 18 146 18 216 0" fill="none" stroke="#ffd18a" stroke-width="20" stroke-linecap="round" opacity=".7"/>
+    <path d="M397 694h230" stroke="#fff1c7" stroke-width="32" stroke-linecap="round" opacity=".72"/>
+    <path d="M606 242 454 612" stroke="#8a3f1e" stroke-width="42" stroke-linecap="round"/>
+    <path d="M606 242 454 612" stroke="#d48a45" stroke-width="22" stroke-linecap="round" opacity=".82"/>
+    <path d="M580 306 526 292M548 386 494 372M516 466 462 452" stroke="#4b1e10" stroke-width="10" stroke-linecap="round" opacity=".65"/>
+  </g>
+</svg>

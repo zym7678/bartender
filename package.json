@@ -4,10 +4,11 @@
   "private": true,
   "description": "调酒库 - 个人调酒管理工具",
   "scripts": {
-    "sync": "npx cap sync",
-    "sync:android": "npx cap sync android",
-    "build:android": "cd android && gradlew assembleDebug",
-    "build:release": "cd android && gradlew assembleRelease",
+    "sync": "npx cap sync && node scripts/fix-android-java-version.js",
+    "sync:android": "npx cap sync android && node scripts/fix-android-java-version.js",
+    "fix:android-java": "node scripts/fix-android-java-version.js",
+    "build:android": "node scripts/fix-android-java-version.js && cd android && gradlew assembleDebug",
+    "build:release": "node scripts/fix-android-java-version.js && cd android && gradlew assembleRelease",
     "open:android": "npx cap open android",
     "icons": "node scripts/gen-icons.js"
   },

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="116" y1="96" x2="904" y2="930" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2b180e"/>
+      <stop offset=".5" stop-color="#0a0806"/>
+      <stop offset="1" stop-color="#2a1209"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="286" y1="234" x2="738" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff5d7"/>
+      <stop offset=".42" stop-color="#e7b262"/>
+      <stop offset="1" stop-color="#8c4b26"/>
+    </linearGradient>
+    <linearGradient id="liquid" x1="342" y1="430" x2="690" y2="718" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffda86"/>
+      <stop offset=".5" stop-color="#c96525"/>
+      <stop offset="1" stop-color="#5b2414"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="174" y1="686" x2="852" y2="884" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e0e08"/>
+      <stop offset=".18" stop-color="#6c371f"/>
+      <stop offset=".58" stop-color="#9b6033"/>
+      <stop offset="1" stop-color="#241008"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="34" stdDeviation="30" flood-color="#000000" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect x="64" y="64" width="896" height="896" rx="184" fill="none" stroke="#f0c47b" stroke-width="8" stroke-opacity=".14"/>
+  <g filter="url(#shadow)">
+    <path d="M180 708c170-66 500-72 664-12 42 15 50 80 10 104-154 94-530 96-686 0-37-22-26-76 12-92Z" fill="url(#wood)"/>
+    <path d="M214 746c144-28 420-34 594-8" stroke="#d9a263" stroke-width="13" stroke-linecap="round" opacity=".32"/>
+    <path d="M272 804c54-32 124-32 190-12" stroke="#120805" stroke-width="15" stroke-linecap="round" opacity=".72"/>
+    <path d="M566 794c74-44 138-42 206-12" stroke="#120805" stroke-width="14" stroke-linecap="round" opacity=".64"/>
+    <path d="M342 310h340l-62 368c-9 58-50 96-108 96s-99-38-108-96L342 310Z" fill="#0e0906" stroke="url(#rim)" stroke-width="42" stroke-linejoin="round"/>
+    <path d="M394 472h236l-30 174c-8 44-40 72-88 72s-80-28-88-72l-30-174Z" fill="url(#liquid)"/>
+    <path d="M390 512c78 28 166 28 244 0" stroke="#ffd792" stroke-width="24" stroke-linecap="round" opacity=".75"/>
+    <path d="M386 682h252" stroke="#fff0c4" stroke-width="34" stroke-linecap="round" opacity=".68"/>
+    <path d="M660 272 494 622" stroke="#5c2413" stroke-width="50" stroke-linecap="round"/>
+    <path d="M660 272 494 622" stroke="#c7793a" stroke-width="24" stroke-linecap="round"/>
+    <path d="M632 334 582 314M602 400 552 380M572 466 522 446" stroke="#2d1009" stroke-width="11" stroke-linecap="round"/>
+  </g>
+</svg>

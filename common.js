@@ -1,4 +1,76 @@
 const STORAGE_PREFIX = "cb_";
+const STORAGE_VERSION = "ingredients-v2";
+
+const STANDARD_INGREDIENTS = [
+  { id: "gin", name: "金酒", category: "基酒" },
+  { id: "vodka", name: "伏特加", category: "基酒" },
+  { id: "white_rum", name: "白朗姆酒", category: "基酒" },
+  { id: "tequila", name: "龙舌兰酒", category: "基酒" },
+  { id: "bourbon", name: "波本威士忌", category: "基酒" },
+  { id: "irish_whiskey", name: "爱尔兰威士忌", category: "基酒" },
+  { id: "rye_whiskey", name: "黑麦威士忌", category: "基酒" },
+  { id: "cognac", name: "干邑白兰地", category: "基酒" },
+  { id: "pisco", name: "皮斯科白兰地", category: "基酒" },
+  { id: "cachaca", name: "卡沙萨酒", category: "基酒" },
+  { id: "orange_liqueur", name: "橙味利口酒", category: "利口酒" },
+  { id: "peach_liqueur", name: "桃子利口酒", category: "利口酒" },
+  { id: "coffee_liqueur", name: "咖啡利口酒", category: "利口酒" },
+  { id: "green_chartreuse", name: "绿查特酒", category: "利口酒" },
+  { id: "maraschino_liqueur", name: "马拉斯奇诺利口酒", category: "利口酒" },
+  { id: "campari", name: "金巴利", category: "苦味/开胃酒" },
+  { id: "aperol", name: "阿佩罗", category: "苦味/开胃酒" },
+  { id: "bitters", name: "苦精", category: "苦精" },
+  { id: "sweet_vermouth", name: "甜味美思", category: "加强葡萄酒" },
+  { id: "dry_vermouth", name: "干味美思", category: "加强葡萄酒" },
+  { id: "prosecco", name: "普罗赛克起泡酒", category: "起泡酒" },
+  { id: "champagne", name: "香槟", category: "起泡酒" },
+  { id: "lime_juice", name: "青柠汁", category: "果汁/酸味" },
+  { id: "lemon_juice", name: "柠檬汁", category: "果汁/酸味" },
+  { id: "orange_juice", name: "橙汁", category: "果汁/酸味" },
+  { id: "grapefruit_juice", name: "葡萄柚汁", category: "果汁/酸味" },
+  { id: "pineapple_juice", name: "菠萝汁", category: "果汁/酸味" },
+  { id: "cranberry_juice", name: "蔓越莓汁", category: "果汁/酸味" },
+  { id: "tomato_juice", name: "番茄汁", category: "果汁/酸味" },
+  { id: "simple_syrup", name: "糖浆", category: "糖类/糖浆" },
+  { id: "grenadine", name: "石榴糖浆", category: "糖类/糖浆" },
+  { id: "peach_puree", name: "桃泥", category: "糖类/糖浆" },
+  { id: "soda_water", name: "苏打水", category: "气泡/软饮" },
+  { id: "tonic_water", name: "汤力水", category: "气泡/软饮" },
+  { id: "ginger_beer", name: "姜汁啤酒", category: "气泡/软饮" },
+  { id: "coffee", name: "咖啡", category: "咖啡/乳制品/蛋" },
+  { id: "coconut_milk", name: "椰奶", category: "咖啡/乳制品/蛋" },
+  { id: "egg_white", name: "蛋白", category: "咖啡/乳制品/蛋" }
+];
+
+const OTHER_CATEGORY = "其他";
+
+const STANDARD_GLASSES = [
+  { id: "rocks", name: "古典杯", visualGlass: "rocks" },
+  { id: "martini", name: "马天尼杯", visualGlass: "martini" },
+  { id: "highball", name: "海波杯", visualGlass: "highball" },
+  { id: "collins", name: "柯林斯杯", visualGlass: "highball" },
+  { id: "coupe", name: "鸡尾酒杯", visualGlass: "coupe" },
+  { id: "flute", name: "香槟杯", visualGlass: "flute" },
+  { id: "wine", name: "葡萄酒杯", visualGlass: "wine" },
+  { id: "copper_mug", name: "铜杯", visualGlass: "highball" },
+  { id: "hurricane", name: "飓风杯", visualGlass: "wine" },
+  { id: "other", name: "其他杯型", visualGlass: "coupe" }
+];
+
+const STANDARD_GARNISHES = [
+  { id: "orange_peel", name: "橙皮", visualGarnish: "orange" },
+  { id: "orange_slice", name: "橙片", visualGarnish: "orange" },
+  { id: "lime_wedge", name: "青柠角", visualGarnish: "lime" },
+  { id: "lime_slice", name: "青柠片", visualGarnish: "lime" },
+  { id: "lemon_peel", name: "柠檬皮", visualGarnish: "lemon" },
+  { id: "lemon_slice", name: "柠檬片", visualGarnish: "lemon" },
+  { id: "cherry", name: "樱桃", visualGarnish: "cherry" },
+  { id: "mint", name: "薄荷", visualGarnish: "mint" },
+  { id: "olive", name: "橄榄", visualGarnish: "olive" },
+  { id: "salt_rim", name: "盐边", visualGarnish: "salt" },
+  { id: "none", name: "无装饰", visualGarnish: "none" },
+  { id: "other", name: "其他装饰", visualGarnish: "none" }
+];
 
 const DB = {
   get(key) {
@@ -29,10 +101,215 @@ const DB = {
   },
 };
 
-function seedSampleData() {
-  if (DB.get("cabinet").length || DB.get("recipes").length) return;
+function ensureStorageVersion() {
+  const key = STORAGE_PREFIX + "schema_version";
+  if (localStorage.getItem(key) === STORAGE_VERSION) return;
+  DB.clear();
+  localStorage.setItem(key, STORAGE_VERSION);
+}
 
-  const spirits = [
+function getStandardIngredients() {
+  return STANDARD_INGREDIENTS.map((ingredient) => ({ ...ingredient }));
+}
+
+function getIngredientCategories() {
+  return [...new Set(STANDARD_INGREDIENTS.map((ingredient) => ingredient.category)), OTHER_CATEGORY];
+}
+
+function getIngredientsByCategory(category) {
+  if (category === OTHER_CATEGORY) return [{ id: "custom", name: "其他原料", category: OTHER_CATEGORY }];
+  return STANDARD_INGREDIENTS.filter((ingredient) => ingredient.category === category).map((ingredient) => ({ ...ingredient }));
+}
+
+function getStandardIngredient(value) {
+  if (!value) return null;
+  const text = String(value).trim();
+  return STANDARD_INGREDIENTS.find((ingredient) => ingredient.id === text || ingredient.name === text) || null;
+}
+
+function makeCustomIngredientId(name) {
+  const text = String(name || "").trim();
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = ((hash << 5) - hash + text.charCodeAt(index)) | 0;
+  }
+  return "custom_" + Math.abs(hash);
+}
+
+function normalizeCustomIngredient(name) {
+  const text = String(name || "").trim();
+  if (!text) {
+    throw new Error("自定义原料不能为空");
+  }
+  return { id: makeCustomIngredientId(text), name: text, category: OTHER_CATEGORY };
+}
+
+function getStandardGlasses() {
+  return STANDARD_GLASSES.map((glass) => ({ ...glass }));
+}
+
+function getStandardGlass(value) {
+  if (!value) return null;
+  const text = String(value).trim();
+  return STANDARD_GLASSES.find((glass) => glass.id === text || glass.name === text) || null;
+}
+
+function normalizeGlass(value) {
+  const standard = getStandardGlass(value);
+  if (standard && standard.id !== "other") {
+    return { glassId: standard.id, glass: standard.name, visualGlass: standard.visualGlass };
+  }
+  const glass = String(value || "").trim() || "其他杯型";
+  return { glassId: standard ? standard.id : "custom", glass, visualGlass: standard ? standard.visualGlass : "coupe" };
+}
+
+function getStandardGarnishes() {
+  return STANDARD_GARNISHES.map((garnish) => ({ ...garnish }));
+}
+
+function getStandardGarnish(value) {
+  if (!value) return null;
+  const text = String(value).trim();
+  return STANDARD_GARNISHES.find((garnish) => garnish.id === text || garnish.name === text) || null;
+}
+
+function normalizeGarnish(value) {
+  const standard = getStandardGarnish(value);
+  if (standard && standard.id !== "other") {
+    return { garnishId: standard.id, garnish: standard.name, visualGarnish: standard.visualGarnish };
+  }
+  const garnish = String(value || "").trim();
+  if (!garnish) return { garnishId: "none", garnish: "", visualGarnish: "none" };
+  return { garnishId: standard ? "other" : "custom", garnish, visualGarnish: "none" };
+}
+
+function normalizeRecipeIngredient(ingredient) {
+  const standard = getStandardIngredient(ingredient.ingredientId || ingredient.name);
+  const normalized = standard || normalizeCustomIngredient(ingredient.name || ingredient.ingredientId);
+  return {
+    ...ingredient,
+    ingredientId: normalized.id,
+    name: normalized.name,
+    category: normalized.category
+  };
+}
+
+function normalizeCabinetItem(item) {
+  const standard = getStandardIngredient(item.ingredientId || item.type);
+  const normalized = standard || normalizeCustomIngredient(item.type || item.ingredientId);
+  return {
+    ...item,
+    ingredientId: normalized.id,
+    type: normalized.name,
+    category: normalized.category
+  };
+}
+
+function getIngredientKey(value) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const standard = getStandardIngredient(value);
+    return standard ? standard.id : value.trim();
+  }
+  if (value.ingredientId) return value.ingredientId;
+  const name = value.name || value.type || "";
+  const standard = getStandardIngredient(name);
+  return standard ? standard.id : makeCustomIngredientId(name);
+}
+
+function ingredientMatches(cabinetItem, recipeIngredient) {
+  return getIngredientKey(cabinetItem) === getIngredientKey(recipeIngredient);
+}
+
+function inferCocktailVisual(recipe) {
+  const glassText = (recipe.glass || "").toLowerCase();
+  const garnishText = recipe.garnish || "";
+  const ingredientIds = (recipe.ingredients || []).map((ingredient) => getIngredientKey(ingredient));
+  const ingredientCategories = (recipe.ingredients || []).map((ingredient) => ingredient.category || "");
+
+  let glass = recipe.visualGlass || "coupe";
+  if (/古典|rocks|old/.test(glassText)) glass = "rocks";
+  else if (/海波|高杯|collins|highball|铜杯/.test(glassText)) glass = "highball";
+  else if (/马天尼|鸡尾酒|martini|cocktail/.test(glassText)) glass = "martini";
+  else if (/香槟|笛|flute/.test(glassText)) glass = "flute";
+  else if (/葡萄酒|wine|飓风|风/.test(glassText)) glass = "wine";
+
+  let palette = "gold";
+  if (ingredientIds.some((id) => ["campari", "cranberry_juice", "grenadine"].includes(id))) palette = "ruby";
+  if (ingredientIds.some((id) => ["aperol", "orange_juice", "peach_puree"].includes(id))) palette = "spritz";
+  if (ingredientIds.some((id) => ["lime_juice", "green_chartreuse"].includes(id))) palette = "lime";
+  if (ingredientIds.some((id) => ["coffee", "coffee_liqueur"].includes(id))) palette = "coffee";
+  if (ingredientIds.some((id) => ["pineapple_juice", "coconut_milk", "egg_white"].includes(id))) palette = "cream";
+  if (ingredientIds.some((id) => ["tomato_juice"].includes(id))) palette = "tomato";
+  if (ingredientIds.some((id) => id.startsWith("custom_")) && ingredientCategories.includes("果汁/酸味")) palette = "spritz";
+
+  let garnish = recipe.visualGarnish || "none";
+  if (/橙|orange/.test(garnishText) || ingredientIds.includes("orange_liqueur") || ingredientIds.includes("orange_juice")) garnish = "orange";
+  if (/青柠|lime/.test(garnishText) || ingredientIds.includes("lime_juice")) garnish = "lime";
+  if (/柠檬|lemon/.test(garnishText) || ingredientIds.includes("lemon_juice")) garnish = "lemon";
+  if (/樱桃|cherry/.test(garnishText)) garnish = "cherry";
+  if (/薄荷|mint/.test(garnishText)) garnish = "mint";
+  if (/橄榄|olive/.test(garnishText)) garnish = "olive";
+  if (/盐/.test(garnishText)) garnish = "salt";
+
+  const bubbles = ingredientIds.some((id) => ["prosecco", "champagne", "soda_water", "tonic_water", "ginger_beer"].includes(id)) || ingredientCategories.includes("气泡/软饮");
+  const ice = ["rocks", "highball", "wine"].includes(glass);
+
+  return { glass, palette, garnish, bubbles, ice };
+}
+
+function renderCocktailVisual(recipe) {
+  const visual = inferCocktailVisual(recipe || {});
+  const visualSeed = String((recipe && (recipe.id || recipe.name)) || visual.glass + visual.palette + visual.garnish);
+  let visualHash = 0;
+  for (let index = 0; index < visualSeed.length; index += 1) {
+    visualHash = ((visualHash << 5) - visualHash + visualSeed.charCodeAt(index)) | 0;
+  }
+  const visualId = "cv" + Math.abs(visualHash);
+  const drinkGradientId = "drinkGradient" + visualId;
+  const visualGlowId = "visualGlow" + visualId;
+  const palettes = {
+    gold: ["#f3d99a", "#c8843e"],
+    ruby: ["#f06a4e", "#8d2119"],
+    spritz: ["#ffb45f", "#d85632"],
+    lime: ["#b9d982", "#4d8f55"],
+    coffee: ["#8d5b3a", "#2b1710"],
+    cream: ["#fff2cd", "#d6a85c"],
+    tomato: ["#e95d46", "#9c251b"],
+  };
+  const colors = palettes[visual.palette] || palettes.gold;
+  const glassShapes = {
+    rocks: '<path d="M74 84h112l-12 112H86z" fill="rgba(255,255,255,.055)" stroke="rgba(247,234,216,.55)" stroke-width="5" stroke-linejoin="round"/><path d="M83 124h94l-7 62H90z" fill="url(#drinkGradient)"/>',
+    highball: '<path d="M82 44h96l-10 152H92z" fill="rgba(255,255,255,.055)" stroke="rgba(247,234,216,.55)" stroke-width="5" stroke-linejoin="round"/><path d="M88 108h84l-5 80H94z" fill="url(#drinkGradient)"/>',
+    martini: '<path d="M54 56h152l-66 78v52h32" fill="none" stroke="rgba(247,234,216,.58)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><path d="M70 68h120l-52 58z" fill="url(#drinkGradient)"/>',
+    coupe: '<path d="M62 72c16 52 120 52 136 0zM130 124v62M98 188h64" fill="none" stroke="rgba(247,234,216,.58)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M75 80h110c-20 30-90 30-110 0z" fill="url(#drinkGradient)"/>',
+    flute: '<path d="M103 38h54l-12 126h-30zM130 164v28M108 194h44" fill="none" stroke="rgba(247,234,216,.58)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M109 78h42l-8 78h-26z" fill="url(#drinkGradient)"/>',
+    wine: '<path d="M76 62c0 58 108 58 108 0c0 78-32 88-54 88s-54-10-54-88zM130 150v42M102 194h56" fill="none" stroke="rgba(247,234,216,.58)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M83 86c15 36 79 36 94 0c-7 44-29 58-47 58s-40-14-47-58z" fill="url(#drinkGradient)"/>',
+  };
+  const garnishShapes = {
+    orange: '<circle cx="178" cy="77" r="22" fill="#f7a64a" stroke="#ffd59a" stroke-width="4"/><path d="M178 57v40M158 77h40M164 63l28 28M192 63l-28 28" stroke="#ffd59a" stroke-width="2" opacity=".75"/>',
+    lime: '<circle cx="178" cy="77" r="21" fill="#93bf62" stroke="#d9efa7" stroke-width="4"/><path d="M178 58v38M159 77h38M165 64l26 26M191 64l-26 26" stroke="#d9efa7" stroke-width="2" opacity=".75"/>',
+    lemon: '<ellipse cx="178" cy="77" rx="25" ry="18" fill="#f4d868" stroke="#fff1a8" stroke-width="4"/>',
+    cherry: '<circle cx="177" cy="78" r="13" fill="#d64a49"/><path d="M178 66c6-18 18-22 28-22" fill="none" stroke="#79a95b" stroke-width="4" stroke-linecap="round"/>',
+    mint: '<path d="M174 82c-18-20-13-44 13-51c13 24 6 41-13 51zM188 86c8-23 29-29 43-10c-12 19-29 23-43 10z" fill="#7dbb75"/>',
+    olive: '<ellipse cx="178" cy="78" rx="18" ry="13" fill="#8fa35c"/><circle cx="183" cy="78" r="5" fill="#c45c4a"/>',
+    salt: '<path d="M56 58h148" stroke="#f8e9d5" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 10" opacity=".9"/>',
+    none: "",
+  };
+  const ice = visual.ice ? '<rect x="106" y="113" width="25" height="25" rx="5" fill="rgba(255,255,255,.22)" transform="rotate(-12 118 125)"/><rect x="133" y="139" width="23" height="23" rx="5" fill="rgba(255,255,255,.18)" transform="rotate(14 144 151)"/>' : "";
+  const bubbles = visual.bubbles ? '<circle class="cocktail-bubble b1" cx="119" cy="99" r="4"/><circle class="cocktail-bubble b2" cx="143" cy="124" r="3"/><circle class="cocktail-bubble b3" cx="132" cy="76" r="3"/>' : "";
+
+  const glassShape = (glassShapes[visual.glass] || glassShapes.coupe).replace(/drinkGradient/g, drinkGradientId);
+
+  return '<svg class="cocktail-visual" data-glass="' + esc(visual.glass) + '" data-palette="' + esc(visual.palette) + '" data-garnish="' + esc(visual.garnish) + '" viewBox="0 0 260 240" role="img" aria-label="' + esc((recipe && recipe.name ? recipe.name : "鸡尾酒") + "图标") + '" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs><linearGradient id="' + drinkGradientId + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + colors[0] + '"/><stop offset="1" stop-color="' + colors[1] + '"/></linearGradient><radialGradient id="' + visualGlowId + '" cx=".5" cy=".52" r=".52"><stop offset="0" stop-color="' + colors[0] + '" stop-opacity=".34"/><stop offset="1" stop-color="' + colors[1] + '" stop-opacity="0"/></radialGradient></defs>' +
+    '<rect x="18" y="8" width="224" height="224" rx="58" fill="rgba(255,255,255,.035)" stroke="rgba(240,196,123,.12)"/><circle cx="130" cy="123" r="98" fill="url(#' + visualGlowId + ')"/><g class="cocktail-glass">' +
+    glassShape + ice + bubbles + (garnishShapes[visual.garnish] || "") +
+    '</g><path d="M64 204c31 14 101 14 132 0" stroke="rgba(240,196,123,.2)" stroke-width="5" stroke-linecap="round"/></svg>';
+}
+
+function getSampleCabinetItems() {
+  return [
     { type: "金酒", brand: "孟买蓝宝石", openedDate: "2026-03-10", total: 750, remaining: 620, unit: "ml" },
     { type: "金酒", brand: "添加利", openedDate: "2026-05-01", total: 750, remaining: 750, unit: "ml" },
     { type: "波本威士忌", brand: "杰克丹尼", openedDate: "2026-02-15", total: 700, remaining: 430, unit: "ml" },
@@ -73,8 +350,10 @@ function seedSampleData() {
     { type: "椰奶", brand: "佳乐", openedDate: "2026-06-12", total: 400, remaining: 400, unit: "ml" },
     { type: "蛋白", brand: "巴氏杀菌蛋白", openedDate: DB.today(), total: 200, remaining: 200, unit: "ml" }
   ];
+}
 
-  const recipes = [
+function getSampleRecipeItems() {
+  return [
     {
       name: "尼格罗尼 Negroni",
       glass: "古典杯",
@@ -476,10 +755,32 @@ function seedSampleData() {
       ]
     }
   ];
+}
+
+function buildSampleCabinetRecords() {
+  return getSampleCabinetItems().map((item) => ({
+    id: DB._id(),
+    ...normalizeCabinetItem({ ...item, remaining: item.total })
+  }));
+}
+
+function buildSampleRecipeRecords() {
+  return getSampleRecipeItems().map((item) => ({
+    id: DB._id(),
+    ...item,
+    ...normalizeGlass(item.glass),
+    ...normalizeGarnish(item.garnish),
+    ingredients: item.ingredients.map(normalizeRecipeIngredient),
+    createdAt: DB.today()
+  }));
+}
+
+function seedSampleData() {
+  if (DB.get("cabinet").length || DB.get("recipes").length) return;
 
   DB.setMany({
-    cabinet: spirits.map((item) => ({ id: DB._id(), ...item })),
-    recipes: recipes.map((item) => ({ id: DB._id(), ...item, createdAt: DB.today() })),
+    cabinet: buildSampleCabinetRecords(),
+    recipes: buildSampleRecipeRecords(),
     log: []
   });
 }
@@ -491,15 +792,44 @@ function resetSampleData() {
   location.reload();
 }
 
+function clearCabinetData() {
+  if (!confirm("清空所有酒柜数据？")) return;
+  DB.set("cabinet", []);
+  toast("已清空酒柜", "ok");
+  if (typeof renderCabinet === "function") renderCabinet();
+}
+
+function addSampleCabinetData() {
+  if (DB.get("cabinet").length && !confirm("添加测试数据会覆盖当前酒柜，继续？")) return;
+  DB.set("cabinet", buildSampleCabinetRecords());
+  toast("已添加测试酒柜", "ok");
+  if (typeof renderCabinet === "function") renderCabinet();
+}
+
+function clearRecipeData() {
+  if (!confirm("清空所有配方数据？")) return;
+  DB.set("recipes", []);
+  toast("已清空配方", "ok");
+  if (typeof renderRecipes === "function") renderRecipes();
+}
+
+function addSampleRecipeData() {
+  if (DB.get("recipes").length && !confirm("添加测试数据会覆盖当前配方，继续？")) return;
+  DB.set("recipes", buildSampleRecipeRecords());
+  toast("已添加测试配方", "ok");
+  if (typeof renderRecipes === "function") renderRecipes();
+}
+
 function saveCabinet(id, type, brand, openedDate, total, remaining) {
+  const normalized = normalizeCabinetItem({ type, brand, openedDate, total, remaining, unit: "ml" });
   const items = DB.get("cabinet");
   if (id) {
     const index = items.findIndex((item) => item.id === id);
     if (index > -1) {
-      items[index] = { ...items[index], type, brand, openedDate, total, remaining };
+      items[index] = { ...items[index], ...normalized };
     }
   } else {
-    items.push({ id: DB._id(), type, brand, openedDate, total, remaining, unit: "ml" });
+    items.push({ id: DB._id(), ...normalized });
   }
   DB.set("cabinet", items);
   return items;
@@ -512,18 +842,21 @@ function deleteCabinet(id) {
 }
 
 function getTypeSuggest() {
-  return [...new Set(DB.get("cabinet").map((item) => item.type))];
+  return getStandardIngredients();
 }
 
 function saveRecipe(id, name, glass, instructions, garnish, ingredients) {
+  const normalizedIngredients = ingredients.map(normalizeRecipeIngredient);
+  const normalizedGlass = normalizeGlass(glass);
+  const normalizedGarnish = normalizeGarnish(garnish);
   const items = DB.get("recipes");
   if (id) {
     const index = items.findIndex((item) => item.id === id);
     if (index > -1) {
-      items[index] = { ...items[index], name, glass, instructions, garnish, ingredients };
+      items[index] = { ...items[index], name, ...normalizedGlass, instructions, ...normalizedGarnish, ingredients: normalizedIngredients };
     }
   } else {
-    items.push({ id: DB._id(), name, glass, instructions, garnish, ingredients, createdAt: DB.today() });
+    items.push({ id: DB._id(), name, ...normalizedGlass, instructions, ...normalizedGarnish, ingredients: normalizedIngredients, createdAt: DB.today() });
   }
   DB.set("recipes", items);
   return items;
@@ -538,12 +871,12 @@ function deleteRecipe(id) {
 function checkMissing(recipe) {
   const cabinet = DB.get("cabinet");
   return recipe.ingredients
-    .filter((ingredient) => !cabinet.some((item) => item.type === ingredient.name && item.remaining >= ingredient.amount))
+    .filter((ingredient) => !cabinet.some((item) => ingredientMatches(item, ingredient) && item.remaining >= ingredient.amount))
     .map((ingredient) => ({ name: ingredient.name }));
 }
 
-function getAvailBrands(typeName, needAmount) {
-  return DB.get("cabinet").filter((item) => item.type === typeName && item.remaining >= needAmount);
+function getAvailBrands(ingredient, needAmount) {
+  return DB.get("cabinet").filter((item) => ingredientMatches(item, ingredient) && item.remaining >= needAmount);
 }
 
 let pendingMakeId = null;
@@ -562,9 +895,10 @@ function makeDrink(recipeId) {
   const multiBrandIngredients = recipe.ingredients
     .map((ingredient) => ({
       name: ingredient.name,
+      ingredientId: ingredient.ingredientId,
       amount: ingredient.amount,
       unit: ingredient.unit,
-      brands: getAvailBrands(ingredient.name, ingredient.amount)
+      brands: getAvailBrands(ingredient, ingredient.amount)
     }))
     .filter((ingredient) => ingredient.brands.length > 1);
 
@@ -590,8 +924,9 @@ function showBrandModal(recipe, multiBrandIngredients) {
 
   list.innerHTML = multiBrandIngredients
     .map((ingredient) => {
-      const selectId = "bs_" + ingredient.name.replace(/\s/g, "");
-      brandSelections[ingredient.name] = ingredient.brands[0].id;
+      const key = getIngredientKey(ingredient);
+      const selectId = "bs_" + key.replace(/\W/g, "");
+      brandSelections[key] = ingredient.brands[0].id;
       return (
         "<div class=brand-pick-item>" +
         "<label>" + esc(ingredient.name) + "（需要 " + ingredient.amount + " " + ingredient.unit + "）</label>" +
@@ -610,10 +945,11 @@ function showBrandModal(recipe, multiBrandIngredients) {
     .join("");
 
   multiBrandIngredients.forEach((ingredient) => {
-    const select = document.getElementById("bs_" + ingredient.name.replace(/\s/g, ""));
+    const key = getIngredientKey(ingredient);
+    const select = document.getElementById("bs_" + key.replace(/\W/g, ""));
     if (select) {
       select.addEventListener("change", () => {
-        brandSelections[ingredient.name] = select.value;
+        brandSelections[key] = select.value;
       });
     }
   });
@@ -633,10 +969,11 @@ function executeMake(recipe, brandMap) {
   const cabinet = DB.get("cabinet");
 
   recipe.ingredients.forEach((ingredient) => {
-    const brands = getAvailBrands(ingredient.name, ingredient.amount);
+    const brands = getAvailBrands(ingredient, ingredient.amount);
+    const key = getIngredientKey(ingredient);
     const target = brands.length === 1
       ? cabinet.find((item) => item.id === brands[0].id)
-      : cabinet.find((item) => item.id === brandMap[ingredient.name]);
+      : cabinet.find((item) => item.id === brandMap[key]);
 
     if (target) {
       target.remaining = Math.round((target.remaining - ingredient.amount) * 10) / 10;
@@ -721,4 +1058,21 @@ function highlightNav() {
   });
 }
 
+globalThis.DB = DB;
+globalThis.getStandardIngredients = getStandardIngredients;
+globalThis.getIngredientCategories = getIngredientCategories;
+globalThis.getIngredientsByCategory = getIngredientsByCategory;
+globalThis.getStandardIngredient = getStandardIngredient;
+globalThis.getStandardGlasses = getStandardGlasses;
+globalThis.getStandardGlass = getStandardGlass;
+globalThis.normalizeGlass = normalizeGlass;
+globalThis.getStandardGarnishes = getStandardGarnishes;
+globalThis.getStandardGarnish = getStandardGarnish;
+globalThis.normalizeGarnish = normalizeGarnish;
+globalThis.inferCocktailVisual = inferCocktailVisual;
+globalThis.renderCocktailVisual = renderCocktailVisual;
+globalThis.checkMissing = checkMissing;
+globalThis.executeMake = executeMake;
+
+ensureStorageVersion();
 seedSampleData();
